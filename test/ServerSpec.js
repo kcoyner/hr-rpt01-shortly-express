@@ -134,7 +134,6 @@ describe('', function() {
       });
 
       it('New links create a database entry', function(done) {
-        console.log('😀😀😀😀😀😀😀😀');
         requestWithSession(options, function(error, res, body) {
           db.knex('urls')
             .where('url', '=', 'http://roflzoo.com/')

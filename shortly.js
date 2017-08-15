@@ -34,6 +34,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
+// analagous to checkUser function as mentioned in Learn
 function restrict(req, res, next) {
   if (req.session.user) {
     next();
@@ -42,8 +43,6 @@ function restrict(req, res, next) {
     res.redirect('/login');
   }
 }
-
-
 
 app.get('/', restrict,
   function(req, res) {
@@ -135,7 +134,6 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-
   var username = req.body.username;
   var password = req.body.password;
 
