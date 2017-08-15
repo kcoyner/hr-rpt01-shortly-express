@@ -23,8 +23,8 @@ Shortly.Router = Backbone.Router.extend({
     this.swapView(new Shortly.createLinkView());
   },
 
-  logout: function(){
-    this.swapView(new Shortly.logoutView());
-  }
+  // logout: function(){
+  //   this.swapView(new Shortly.logoutView());
+  // }
 });
 

@@ -24,10 +24,11 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(express.static(__dirname + '/public'));
+
 app.use(session({
   secret: 'keyboard cat',
   cookie: {
-    maxAge: 19900000
+    maxAge: 500000
   },
   resave: false,
   saveUninitialized: false
@@ -116,11 +117,18 @@ app.post('/signup', function(req, res) {
   });
 
   user.save().then(function() {
-    return res.redirect('/');
+    // return res.redirect('/');
+    if (!user) {
+      console.log('User save did not complete');
+      res.redirect('/login');
+    } else {
+      req.session.regenerate(function() {
+        req.session.user = username;
+        res.redirect('/');
+      });
+    }
   });
 });
-
-
 
 app.get('/login', function(req, res) {
   res.render('login');
@@ -145,22 +153,16 @@ app.post('/login', function(req, res) {
         req.session.user = username;
         res.redirect('/');
       });
-      console.log('req.sessionID: ', req.sessionID);
-      console.log('req.session.cookie: ', req.session.cookie);
     }
   });
 });
-
 
 app.get('/logout', restrict, function(req, res) {
   req.session.destroy(function(err) {
     if (err) {
       console.log('Error while destroying cookie: ', err);
     }
-    console.log('req.sessionID: ', req.sessionID);
-    console.log('req.session.cookie: ', req.session.cookie);
-    // res.render('logout');
-    res.render('index');
+    res.render('logout');
   });
 });
 
