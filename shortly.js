@@ -83,10 +83,10 @@ app.post('/links', restrict,
           }
 
           Links.create({
-              url: uri,
-              title: title,
-              baseUrl: req.headers.origin
-            })
+            url: uri,
+            title: title,
+            baseUrl: req.headers.origin
+          })
             .then(function(newLink) {
               res.status(200).send(newLink);
             });
@@ -138,33 +138,30 @@ app.post('/login', function(req, res) {
     username: username
   }).fetch().then(function(user) {
     if (!user) {
-      console.log("Not Valid Username and/or password");
+      console.log('Not Valid Username and/or password');
       res.redirect('/login');
     } else {
       req.session.regenerate(function() {
         req.session.user = username;
         res.redirect('/');
       });
+      console.log('req.sessionID: ', req.sessionID);
+      console.log('req.session.cookie: ', req.session.cookie);
     }
   });
-
-  // if(username == 'Phillip' && password == 'Phillip'){
-  //     req.session.regenerate(function(){
-  //     req.session.user = username;
-  //     res.redirect('/links');
-  //     });
-  // }
-  // else {
-  //    res.redirect('/login');
-  // }
-
-
 });
 
 
-app.get('/logout', function(req, res) {
-  //kill the session cookie
-  res.render('logout');
+app.get('/logout', restrict, function(req, res) {
+  req.session.destroy(function(err) {
+    if (err) {
+      console.log('Error while destroying cookie: ', err);
+    }
+    console.log('req.sessionID: ', req.sessionID);
+    console.log('req.session.cookie: ', req.session.cookie);
+    // res.render('logout');
+    res.render('index');
+  });
 });
 
 
