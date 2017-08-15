@@ -57,4 +57,3 @@ db.knex.schema.hasTable('users').then(function(exists) {
 
 
 module.exports = db;
-

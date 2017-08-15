@@ -4,6 +4,7 @@
   <ul>
     <li><a href='#' class='index'>All Links</a></li>
     <li><a href='#' class='create'>Shorten</a></li>
+    <li><a href='#' class='logout'>Logout</a></li>
   </ul>
   </div>
   <div id='container'></div>
@@ -19,14 +20,26 @@
   </div>
 </script>
 
-<script id='create' type='text/x-handlebars-template'>
+<!-- <script id='create' type='text/x-handlebars-template'>
   <form>
       <input class='text' type='text' name='url'>
       <input type='submit' value='Shorten'>
   </form>
   <img class='spinner' src='/spiffygif_46x46.gif'>
   <div class='message'></div>
+</script> -->
+
+<script id='logout' type='text/x-handlebars-template'>
+  <img src='/redirect_icon.png'/>
+  <div class='info'>
+    <div class='visits'><span class='count'>{{visits}}</span>Visits</div>
+    <div class='title'>{{title}}</div>
+    <div class='original'>{{url}}</div>
+    <a href='{{baseUrl}}/{{code}}'>{{baseUrl}}/{{code}}</a>
+  </div>
 </script>
+
+
 
 <script>
   window.Templates = {};
@@ -34,3 +47,4 @@
     Templates[div.id] = Handlebars.compile(div.innerHTML);
   });
 </script>
+

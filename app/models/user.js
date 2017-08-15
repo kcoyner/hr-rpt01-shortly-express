@@ -23,4 +23,3 @@ comparePasswords: function(password) {
 });
 
 module.exports = User;
-

@@ -4,4 +4,3 @@ var app = require('./shortly.js');
 app.listen(4567, function() {
   console.log('Shortly is listening on 4567');
 });
-

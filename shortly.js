@@ -20,9 +20,18 @@ app.use(partials());
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
 // Parse forms (signup/login)
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(express.static(__dirname + '/public'));
-app.use(session({ secret: 'keyboard cat', cookie: { maxAge: 199000 }, resave: false, saveUninitialized: false }));
+app.use(session({
+  secret: 'keyboard cat',
+  cookie: {
+    maxAge: 19900000
+  },
+  resave: false,
+  saveUninitialized: false
+}));
 
 function restrict(req, res, next) {
   if (req.session.user) {
@@ -36,53 +45,55 @@ function restrict(req, res, next) {
 
 
 app.get('/', restrict,
-function(req, res) {
-  res.render('index');
-});
+  function(req, res) {
+    res.render('index');
+  });
 
 app.get('/create', restrict,
-function(req, res) {
-  res.render('index');
-});
+  function(req, res) {
+    res.render('index');
+  });
 
 app.get('/links', restrict,
-function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
+  function(req, res) {
+    Links.reset().fetch().then(function(links) {
+      res.status(200).send(links.models);
+    });
   });
-});
 
 app.post('/links', restrict,
-function(req, res) {
-  var uri = req.body.url;
+  function(req, res) {
+    var uri = req.body.url;
 
-  if (!util.isValidUrl(uri)) {
-    console.log('Not a valid url: ', uri);
-    return res.sendStatus(404);
-  }
-
-  new Link({ url: uri }).fetch().then(function(found) {
-    if (found) {
-      res.status(200).send(found.attributes);
-    } else {
-      util.getUrlTitle(uri, function(err, title) {
-        if (err) {
-          console.log('Error reading URL heading: ', err);
-          return res.sendStatus(404);
-        }
-
-        Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        });
-      });
+    if (!util.isValidUrl(uri)) {
+      console.log('Not a valid url: ', uri);
+      return res.sendStatus(404);
     }
+
+    new Link({
+      url: uri
+    }).fetch().then(function(found) {
+      if (found) {
+        res.status(200).send(found.attributes);
+      } else {
+        util.getUrlTitle(uri, function(err, title) {
+          if (err) {
+            console.log('Error reading URL heading: ', err);
+            return res.sendStatus(404);
+          }
+
+          Links.create({
+              url: uri,
+              title: title,
+              baseUrl: req.headers.origin
+            })
+            .then(function(newLink) {
+              res.status(200).send(newLink);
+            });
+        });
+      }
+    });
   });
-});
 
 /************************************************************/
 // Write your authentication routes here
@@ -91,7 +102,7 @@ app.get('/signup', function(req, res) {
   res.render('signup');
 });
 
-app.post('/signup', function( req,res) {
+app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
@@ -104,14 +115,14 @@ app.post('/signup', function( req,res) {
     salt: salt
   });
 
-  user.save().then(function(){
-    return res.redirect('/links');
+  user.save().then(function() {
+    return res.redirect('/');
   });
 });
 
 
 
-app.get('/login', function( req, res ){
+app.get('/login', function(req, res) {
   res.render('login');
 });
 
@@ -123,30 +134,39 @@ app.post('/login', function(req, res) {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
 
-  var usr = new User({ username: username}).fetch().then(function(user) {
+  var usr = new User({
+    username: username
+  }).fetch().then(function(user) {
     if (!user) {
       console.log("Not Valid Username and/or password");
       res.redirect('/login');
     } else {
-        req.session.regenerate(function(){
+      req.session.regenerate(function() {
         req.session.user = username;
-        res.redirect('/links');
-        });
+        res.redirect('/');
+      });
     }
   });
 
-    // if(username == 'Phillip' && password == 'Phillip'){
-    //     req.session.regenerate(function(){
-    //     req.session.user = username;
-    //     res.redirect('/links');
-    //     });
-    // }
-    // else {
-    //    res.redirect('/login');
-    // }
+  // if(username == 'Phillip' && password == 'Phillip'){
+  //     req.session.regenerate(function(){
+  //     req.session.user = username;
+  //     res.redirect('/links');
+  //     });
+  // }
+  // else {
+  //    res.redirect('/login');
+  // }
 
 
 });
+
+
+app.get('/logout', function(req, res) {
+  //kill the session cookie
+  res.render('logout');
+});
+
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
@@ -155,7 +175,9 @@ app.post('/login', function(req, res) {
 /************************************************************/
 
 app.get('/*', function(req, res) {
-  new Link({ code: req.params[0] }).fetch().then(function(link) {
+  new Link({
+    code: req.params[0]
+  }).fetch().then(function(link) {
     if (!link) {
       res.redirect('/');
     } else {
@@ -174,4 +196,3 @@ app.get('/*', function(req, res) {
 });
 
 module.exports = app;
-
