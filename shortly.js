@@ -12,6 +12,54 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+
+//PASSPORT Authentication Modules
+var GitHubStrategy = require('passport-github2').Strategy;
+var passport = require('passport');
+
+// Client ID
+// Client Secret
+
+
+
+
+var GITHUB_CLIENT_ID = '4445f89238074eb889f6';
+var GITHUB_CLIENT_SECRET = 'abf6f60e83283871e80f4ab1a503bf2425245528';
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+
+// Use the GitHubStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and GitHub
+//   profile), and invoke a callback with a user object.
+passport.use(new GitHubStrategy({
+    clientID: GITHUB_CLIENT_ID,
+    clientSecret: GITHUB_CLIENT_SECRET,
+    callbackURL: "http://lvh.me:4567/callback"
+  },
+
+  function(accessToken, refreshToken, profile, done) {
+    // asynchronous verification, for effect...
+    process.nextTick(function() {
+
+      // To keep the example simple, the user's GitHub profile is returned to
+      // represent the logged-in user.  In a typical application, you would want
+      // to associate the GitHub account with a user record in your database,
+      // and return that user instead.
+      return done(null, profile);
+    });
+  }
+));
+
+
+
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -23,6 +71,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(__dirname + '/public'));
 
 app.use(session({
@@ -44,27 +94,28 @@ function restrict(req, res, next) {
   }
 }
 
-app.get('/', restrict,
+app.get('/',
   function(req, res) {
     res.render('index');
   });
 
-app.get('/create', restrict,
+app.get('/create', ensureAuthenticated,
   function(req, res) {
-    res.render('index');
+    res.render('index', {
+      user: req.user
+    });
   });
 
-app.get('/links', restrict,
+app.get('/links',
   function(req, res) {
     Links.reset().fetch().then(function(links) {
       res.status(200).send(links.models);
     });
   });
 
-app.post('/links', restrict,
+app.post('/links',
   function(req, res) {
     var uri = req.body.url;
-
     if (!util.isValidUrl(uri)) {
       console.log('Not a valid url: ', uri);
       return res.sendStatus(404);
@@ -133,36 +184,61 @@ app.get('/login', function(req, res) {
   res.render('login');
 });
 
-app.post('/login', function(req, res) {
-  var username = req.body.username;
-  var password = req.body.password;
+// app.post('/login', function(req, res) {
+//   var username = req.body.username;
+//   var password = req.body.password;
 
-  var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(password, salt);
+//   var salt = bcrypt.genSaltSync(10);
+//   var hash = bcrypt.hashSync(password, salt);
 
-  var usr = new User({
-    username: username
-  }).fetch().then(function(user) {
-    if (!user) {
-      console.log('Not Valid Username and/or password');
-      res.redirect('/login');
-    } else {
-      req.session.regenerate(function() {
-        req.session.user = username;
-        res.redirect('/');
-      });
-    }
+//   var usr = new User({
+//     username: username
+//   }).fetch().then(function(user) {
+//     if (!user) {
+//       console.log('Not Valid Username and/or password');
+//       res.redirect('/login');
+//     } else {
+//       req.session.regenerate(function() {
+//         req.session.user = username;
+//         res.redirect('/');
+//       });
+//     }
+//   });
+// });
+
+app.get('/auth/github',
+  passport.authenticate('github', {
+    scope: ['user:username']
+  }),
+  function(req, res) {
+    // The request will be redirected to GitHub for authentication, so this
+    // function will not be called.
   });
+
+app.get('/auth/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: '/login'
+  }),
+  function(req, res) {
+    res.redirect('/index');
+  });
+
+// app.get('/logout', ensureAuthenticated, function(req, res) {
+//   req.session.destroy(function(err) {
+//     if (err) {
+//       console.log('Error while destroying cookie: ', err);
+//     }
+//     res.render('logout');
+//   });
+// });
+
+
+app.get('/logout', function(req, res) {
+  // TODO:  checkout this logout function.  Does it really logout?
+  req.logout();
+  res.redirect('/login');
 });
 
-app.get('/logout', restrict, function(req, res) {
-  req.session.destroy(function(err) {
-    if (err) {
-      console.log('Error while destroying cookie: ', err);
-    }
-    res.render('logout');
-  });
-});
 
 
 /************************************************************/
@@ -191,5 +267,13 @@ app.get('/*', function(req, res) {
     }
   });
 });
+
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/index');
+}
 
 module.exports = app;
